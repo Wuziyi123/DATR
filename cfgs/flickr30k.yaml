@@ -1,0 +1,12 @@
+dataset_name: "flickr30k"
+model_size: "ViT-B/16"
+alpha: 0.1
+n_samples: 5
+batch_size: 16
+data_path: "/path/to/flickr30k"
+patch_n: 5
+n_run: 20
+methods:
+  - our_method:
+      name: "ours"
+      enabled: true

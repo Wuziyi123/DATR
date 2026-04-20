@@ -1,0 +1,20 @@
+model_size: ViT-B/16
+batch_size: 16
+dataset: imagenet
+data_path : data/imagenet 
+
+alpha: 0.5
+n_samples: 5
+n_run: 20
+patch_n: 5
+
+methods:
+  - ours:
+      name: ours
+      enabled: True
+      image_scale: 3.6
+      text_scale: 1.5
+  - clip: 
+      name: clip
+      enabled: True
+
