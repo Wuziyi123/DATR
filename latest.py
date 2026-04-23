@@ -215,11 +215,11 @@ class AdvancedCrossModalRetriever(nn.Module):
         # self.frozen_trans = trans_model.visual
 
         # === 全局特征路径 ===
-        self.global_path = GlobalFourierPath(clip_model, embed_dim)
+        self.global_path = GlobalPath(clip_model, embed_dim)
         # === 局部特征路径 ===
         # 局部分支
         # self.local_path = LocalPath(768, 8, self.frozen_trans)
-        self.local_path = LocalWaveletPath(trans_model, embed_dim, num_crops)
+        self.local_path = LocaltPath(trans_model, embed_dim, num_crops)
 
         # swin_pretrained_path = "swin_base_patch4_window7_224_22kto1k.pth"
         # self.global_path = SwinGlobalPath(embed_dim)
@@ -305,41 +305,7 @@ class AdvancedCrossModalRetriever(nn.Module):
         self.text_guided_image_purify.gate.data.fill_(gate_value)
         # self.image_guided_text_purify.gate.data.fill_(gate_value)
 
-    # def _register_grad_hook(self, attn_weights):
-    #     """注册梯度钩子来捕获非叶子节点的梯度"""
-    #     # 保存注意力权重
-    #     self.attention_weights = attn_weights
-    #     attn_weights.retain_grad()  # 关键：确保非叶子节点保留梯度
-    #
-    #     # 移除之前的钩子（如果存在）
-    #     if self.grad_hook_handle is not None:
-    #         self.grad_hook_handle.remove()
-    #
-    #     # 注册新的梯度钩子
-    #     def grad_hook(grad):
-    #         # 保存梯度
-    #         print("Grad hook triggered!")  # 调试信息
-    #         self.attention_gradients = grad
-    #         # 返回原始梯度，不修改
-    #         return grad
-    #
-    #     # 在非叶子节点上注册钩子
-    #     self.grad_hook_handle = attn_weights.register_hook(grad_hook)
-
-    # def _remove_grad_hook(self):
-    #     """移除梯度钩子"""
-    #     if self.grad_hook_handle is not None:
-    #         self.grad_hook_handle.remove()
-    #         self.grad_hook_handle = None
-    #     self.attention_weights = None
-    #     self.attention_gradients = None
-
     def forward(self, images, texts, attention_mask=None, original_texts=None):
-        # if attention_mask is not None:
-        #     # 创建key_padding_mask：文本序列的填充位置为True
-        #     key_padding_mask = (attention_mask.squeeze(1) == 0).bool()  # [B, seq_len]
-        # else:
-        #     key_padding_mask = None
         # ===== 特征提取 =====
         # 全局特征
         global_feat = self.global_path(images[:, 0])
@@ -393,9 +359,6 @@ class AdvancedCrossModalRetriever(nn.Module):
             "text_feats": global_text,
             "local_text": local_text,
             "sim_matrix": sim_matrix,
-            # "itm_loss": itm_loss,
-            # "itm_logits": itm_logits
-            # "distribution_loss": distribution_loss if self.mode == "train" else 0.0
         }
 
     def compute_loss(self, outputs, lambda_metric=0.1):
@@ -461,19 +424,8 @@ class AdvancedCrossModalRetriever(nn.Module):
                 return self.compute_alternative_gradcam(image_features, target_token_idx)
 
             # 获取注意力权重和梯度
-            # cams = cams[:, :, :, 1:].reshape(B, 8, -1, 14, 14) * mask
             cams = cams[:, :, :, 1:].reshape(B, 8, -1, 14, 14) * mask
             grads_abs = grads[:, :, :, 1:].reshape(B, 8, -1, 14, 14) * mask
-
-            # if grads_abs.max() < 1e-5:  # 如果梯度太小
-            #     print("Gradients too small, applying amplification...")
-            #     # 归一化到合理范围
-            #     grads_normalized = (grads_abs - grads_abs.min()) / (grads_abs.max() - grads_abs.min() + 1e-8)
-            #     grads_amplified = grads_normalized * 0.5  # 缩放到[0, 0.5]范围
-            #
-            #     grads_to_use = grads_amplified
-            # else:
-            #     grads_to_use = grads_abs
 
             # 使用加权平均而不是简单相乘
             # 计算每个位置的权重
@@ -482,10 +434,6 @@ class AdvancedCrossModalRetriever(nn.Module):
 
             # 应用权重到激活图
             gradcam = cams * weights
-
-            # grads = grads[:, :, :, 1:].clamp(0).reshape(B, 8, -1, 14, 14) * mask
-            # grads = grads[:, :, :, 1:].abs().reshape(B, 8, -1, 14, 14) * mask
-
             gradcam = gradcam[0].mean(0).cpu().detach().numpy()
 
             return gradcam
@@ -493,342 +441,6 @@ class AdvancedCrossModalRetriever(nn.Module):
         except Exception as e:
             print(f"Error computing Grad-CAM: {e}")
             return self.compute_alternative_gradcam(image_features, target_token_idx)
-
-    def visualize(self, original_image, gradcam_map, caption, tokenizer=None, target_token=None, save_path=None):
-        """
-        可视化Grad-CAM结果
-        Args:
-            original_image: 原始PIL图像
-            gradcam_map: Grad-CAM热力图 [224, 224]
-            caption: 对应的字幕文本
-            tokenizer: 用于文本标记化的tokenizer
-            target_token: 目标token
-            save_path: 保存路径
-        Returns:
-            fig: matplotlib图形对象
-        """
-        import cv2
-        import numpy as np
-        from matplotlib import pyplot as plt
-        from scipy.ndimage import filters
-
-        def getAttMap(img, attMap, blur=True, overlap=True):
-            """生成注意力叠加图"""
-            attMap -= attMap.min()
-            if attMap.max() > 0:
-                attMap /= attMap.max()
-
-            # 调整尺寸匹配原图
-            attMap = cv2.resize(attMap, (img.shape[1], img.shape[0]))
-
-            if blur:
-                attMap = filters.gaussian_filter(attMap, 0.02 * max(img.shape[:2]))
-                attMap -= attMap.min()
-                if attMap.max() > 0:
-                    attMap /= attMap.max()
-
-            cmap = plt.get_cmap('jet')
-            attMapV = cmap(attMap)
-            attMapV = np.delete(attMapV, 3, 2)
-
-            if overlap:
-                attMap = 1 * (1 - attMap ** 0.7).reshape(attMap.shape + (1,)) * img + \
-                         (attMap ** 0.7).reshape(attMap.shape + (1,)) * attMapV
-            return attMap
-
-        # 转换图像格式
-        if isinstance(original_image, Image.Image):
-            img_np = np.array(original_image)
-        else:
-            img_np = original_image
-
-        if len(img_np.shape) == 3 and img_np.shape[-1] == 3:  # RGB转BGR用于OpenCV
-            img_np = img_np[:, :, ::-1]
-        rgb_image = np.float32(img_np) / 255
-
-        # 处理Grad-CAM图
-        if isinstance(gradcam_map, torch.Tensor):
-            gradcam_np = gradcam_map.detach().cpu().numpy()
-        else:
-            gradcam_np = gradcam_map
-
-        # 确保尺寸匹配
-        if gradcam_np.shape != rgb_image.shape[:2]:
-            gradcam_np = cv2.resize(gradcam_np, (rgb_image.shape[1], rgb_image.shape[0]))
-
-        # 应用Grad-CAM
-        atten_map = getAttMap(rgb_image, gradcam_np)
-
-        # 创建可视化
-        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 6))
-
-        # 显示原图
-        ax1.imshow(cv2.cvtColor(np.uint8(rgb_image * 255), cv2.COLOR_BGR2RGB))
-        ax1.set_title('Original Image')
-        ax1.axis('off')
-
-        # 显示热力图
-        im = ax2.imshow(gradcam_np, cmap='jet')
-        ax2.set_title('Grad-CAM Heatmap')
-        ax2.axis('off')
-        plt.colorbar(im, ax=ax2, fraction=0.046, pad=0.04)
-
-        # 显示叠加图
-        ax3.imshow(atten_map)
-        title = f'Grad-CAM Overlay'
-        if target_token:
-            title += f'\nTarget: {target_token}'
-        ax3.set_title(title)
-        ax3.axis('off')
-
-        # 添加字幕文本
-        fig.suptitle(f'Caption: {caption}', fontsize=12, y=0.95)
-
-        plt.tight_layout()
-
-        if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"Grad-CAM visualization saved to {save_path}")
-
-        return fig
-
-    def visualize_gradcam(self, original_image, gradcam_map, caption, save_path=None):
-        """
-        可视化Grad-Cam结果，模仿文档4的getAttMap函数
-        Args:
-            original_image: 原始PIL图像
-            gradcam_map: Grad-Cam热力图 [224, 224]
-            caption: 对应的字幕文本
-            save_path: 保存路径
-        """
-        import cv2
-        import numpy as np
-        from matplotlib import pyplot as plt
-        from scipy.ndimage import filters
-        from skimage import transform as skimage_transform
-
-        def getAttMap(img, attMap, blur=True, overlap=True):
-            """修复维度不匹配问题的getAttMap函数"""
-            attMap -= attMap.min()
-            if attMap.max() > 0:
-                attMap /= attMap.max()
-            else:
-                # 如果全零，创建一个默认的热力图
-                attMap = np.ones_like(attMap) * 0.5
-
-            # 调整热力图尺寸匹配原图
-            attMap = skimage_transform.resize(attMap, (224, 224), order=3, mode='constant')
-
-            if blur:
-                attMap = filters.gaussian_filter(attMap, sigma=1.0)
-                attMap -= attMap.min()
-                if attMap.max() > 0:
-                    attMap /= attMap.max()
-
-            cmap = plt.get_cmap('jet')
-            attMapV = cmap(attMap)
-            attMapV = np.delete(attMapV, 3, 2)  # 移除alpha通道
-
-            # 确保img是HWC格式 (224,224,3)
-            if img.shape[0] == 3:  # 如果是CHW格式 (3,224,224)，转换为HWC
-                img = img.transpose(1, 2, 0)
-
-            # 确保attMap是2D，然后扩展为3D用于广播
-            attMap_2d = attMap
-            if len(attMap.shape) == 3 and attMap.shape[2] == 1:
-                attMap_2d = attMap[:, :, 0]
-
-            if overlap:
-                # 使用正确的广播维度
-                overlay = (1 - attMap_2d ** 0.7)[:, :, np.newaxis] * img + \
-                          (attMap_2d ** 0.7)[:, :, np.newaxis] * attMapV
-                return overlay
-            return attMapV
-
-        # 转换图像格式
-        if isinstance(original_image, torch.Tensor):
-            img_np = original_image.numpy().transpose(1, 2, 0)  # CHW -> HWC
-        else:
-            img_np = np.array(original_image)
-
-        # 确保图像是RGB格式
-        if img_np.shape[-1] != 3:
-            if len(img_np.shape) == 2:  # 灰度图
-                img_np = np.stack([img_np] * 3, axis=-1)
-            elif img_np.shape[0] == 3:  # CHW格式
-                img_np = img_np.transpose(1, 2, 0)  # 转为HWC
-
-        # 归一化到[0,1]
-        if img_np.dtype == np.uint8:
-            rgb_image = np.float32(img_np) / 255.0
-        else:
-            rgb_image = np.float32(img_np)
-
-        # 处理Grad-CAM图
-        if isinstance(gradcam_map, torch.Tensor):
-            gradcam_np = gradcam_map.detach().cpu().numpy()
-        else:
-            gradcam_np = gradcam_map
-
-        # 选择第一个样本的热力图（如果batch_size>1）
-        if len(gradcam_np.shape) > 2:
-            cam_to_use = gradcam_np[0]  # 使用第一个样本
-        else:
-            cam_to_use = gradcam_np
-
-        # 应用Grad-CAM
-        try:
-            atten_map = getAttMap(rgb_image, cam_to_use)
-        except Exception as e:
-            print(f"Error in getAttMap: {e}")
-            # 创建简单的热力图作为备选
-            simple_heatmap = np.ones((224, 224)) * 0.5
-            atten_map = getAttMap(rgb_image, simple_heatmap)
-
-        # 创建可视化
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
-
-        # 显示原图
-        ax1.imshow(rgb_image)
-        ax1.set_title('Original Image')
-        ax1.axis('off')
-
-        # 显示Grad-CAM结果
-        ax2.imshow(atten_map)
-        ax2.set_title(f'Grad-CAM: {caption}')
-        ax2.axis('off')
-
-        plt.tight_layout()
-
-        if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"Grad-CAM visualization saved to {save_path}")
-
-        return fig
-
-
-class MultiLevelLoss(nn.Module):
-    """多层级损失：集成鲁棒损失和正则化项"""
-
-    def __init__(self, embed_dim, alpha=0.7, beta=0.3, temp_init=0.07):
-        super().__init__()
-        self.temperature = nn.Parameter(torch.tensor(temp_init))
-        self.alpha = alpha  # 鲁棒损失权重
-        self.beta = beta  # 正则化权重
-        self.log_loss = LogRobustLoss(gamma=1.0)
-
-    def forward(self, outputs, labels, model):
-        # 提取特征
-        global_vis = outputs["global_feat"]
-        text_feats = outputs["text_feats"]
-        match_scores = outputs["match_scores"]
-        local_feats = outputs["local_feats"]
-        B, num_crops, D = local_feats.shape
-        num_texts = text_feats.size(1)  # 5个文本
-
-        # === 鲁棒实例级对比损失 ===
-        global_text = torch.mean(text_feats, dim=1)
-        logits = torch.matmul(global_vis, global_text.t()) / self.temperature
-
-        # 标准交叉熵
-        ce_loss = F.cross_entropy(logits, labels) + F.cross_entropy(logits.t(), labels)
-
-        # 鲁棒log损失
-        robust_loss = self.log_loss(logits, F.one_hot(labels, num_classes=logits.size(-1)).float())
-
-        # 组合损失
-        inst_loss = self.alpha * robust_loss + (1 - self.alpha) * ce_loss
-
-        # === 局部对比损失 ===
-        local_loss = 0
-        for i in range(local_feats.size(1)):
-            crop_feats = local_feats[:, i]
-            logits = torch.matmul(crop_feats, text_feats.mean(dim=1).t()) / self.temperature
-
-            # 标准交叉熵
-            ce_local = F.cross_entropy(logits, labels)
-
-            # 鲁棒log损失
-            robust_local = self.log_loss(logits, F.one_hot(labels, num_classes=logits.size(-1)).float())
-
-            local_loss += self.alpha * robust_local + (1 - self.alpha) * ce_local
-
-        local_loss /= local_feats.size(1)
-
-        # === 图一致性损失 ===
-        vis_global = outputs["vis_graph"]["graph"]
-        text_global = outputs["text_graph"]["graph"]
-        graph_loss = F.mse_loss(
-            F.normalize(vis_global, dim=-1),
-            F.normalize(text_global, dim=-1)
-        )
-
-        # === 多匹配损失 ===
-        match_loss = 0.0
-        match_loss = self.matching_loss(match_scores)
-
-        # === 早期学习正则化 ===
-        elr_loss = 0
-        # elr_loss += model.elr_global(global_vis).mean()
-        # elr_loss += model.elr_local(local_feats.mean(dim=1)).mean()
-        # elr_loss += model.elr_text(text_feats.mean(dim=1)).mean()
-
-        # === 正则化项 ===
-        # reg_loss = outputs["reg_loss"] + outputs["vc_loss"]
-        reg_loss = outputs["reg_loss"]
-
-        # 总损失
-        total_loss = (0.4 * inst_loss + 0.3 * local_loss +
-                      0.2 * graph_loss + 0.1 * match_loss +
-                      self.beta * (elr_loss + reg_loss))
-
-        return total_loss
-
-    def matching_loss(self, match_scores, labels):
-        """修改后的多匹配损失：每个局部图像与对应图片的字幕作为正样本，与其他图片的字幕作为负样本"""
-        # 输入match_scores维度: [batch_size, num_crops, num_texts, 3]
-        # 先合并三种分数：取平均
-        mean_scores = torch.mean(match_scores, dim=-1)  # [B, num_crops, num_texts]
-
-        B, num_crops, num_texts = mean_scores.shape
-        # 计算每个图片对应的文本数（假设每个图片有相同数量的文本）
-        num_texts_per_image = num_texts // B
-
-        # 创建掩码：标记正样本位置 [B, num_texts]
-        mask = torch.zeros(B, num_texts, device=mean_scores.device, dtype=torch.bool)
-        for i in range(B):
-            start_idx = i * num_texts_per_image
-            end_idx = start_idx + num_texts_per_image
-            mask[i, start_idx:end_idx] = True
-
-        # 扩展掩码到每个局部图像 [B, num_crops, num_texts]
-        mask_expanded = mask.unsqueeze(1).expand(-1, num_crops, -1)
-
-        # 计算正样本分数（当前图片的局部图像与对应字幕）
-        pos_scores = mean_scores[mask_expanded].view(B, num_crops, -1)  # [B, num_crops, num_texts_per_image]
-
-        # 计算负样本分数（当前图片的局部图像与其他图片的字幕）
-        neg_mask = ~mask_expanded
-        neg_scores = mean_scores[neg_mask].view(B, num_crops, -1)  # [B, num_crops, num_neg_texts]
-
-        # 计算对比损失
-        loss = 0.0
-        tau = 0.07  # 温度参数
-        for i in range(B):
-            for j in range(num_crops):
-                # 当前局部图像的正样本分数
-                pos = pos_scores[i, j]  # [num_texts_per_image]
-
-                # 当前局部图像的负样本分数
-                neg = neg_scores[i, j]  # [num_neg_texts]
-
-                # 计算InfoNCE损失
-                numerator = torch.exp(pos / tau).sum()
-                denominator = numerator + torch.exp(neg / tau).sum()
-                loss += -torch.log(numerator / denominator)
-
-        # 平均损失
-        return loss / (B * num_crops)
 
 
 # ===== 训练主函数 =====
@@ -892,11 +504,6 @@ def train_retriever():
         clip_model, _ = clip.load("ViT-L/14@336px", device=device)
         for param in clip_model.parameters():
             param.requires_grad = False
-        # for name, param in clip_model.named_parameters():
-        #     if "blocks.11" in name or "blocks.10" in name:
-        #         param.requires_grad_(True)
-        #     else:
-        #         param.requires_grad_(False)
 
         trans_model, _ = clip.load("ViT-L/14@336px", device=device)
         for param in trans_model.parameters():
@@ -929,7 +536,7 @@ def train_retriever():
 
     # 训练循环
     num_epochs = 60
-    current_epoch = 15
+    current_epoch = 0
     best_epoch = 0
     val_rsum = 0
     best_test_rsum = 0
@@ -1069,12 +676,6 @@ def train_retriever():
         print(f"{'-' * 60}")
         print(f"Training Loss: {avg_loss:.4f} | Time: {train_time:.2f}s")
         print(f"Validation RSUM: {val_rsum:.1f} | Time: {val_time:.2f}s")
-        # print(f"Test RSUM: {test_rsum:.1f} | Time: {test_time:.2f}s")
-        # print(f"{'-' * 60}")
-        # print("Test Results:")
-        # print(f"Image to Text: R@1 = {test_i2t[0]:.1f}, R@5 = {test_i2t[1]:.1f}, R@10 = {test_i2t[2]:.1f}")
-        # print(f"Text to Image: R@1 = {test_t2i[0]:.1f}, R@5 = {test_t2i[1]:.1f}, R@10 = {test_t2i[2]:.1f}")
-        # print(f"{'=' * 60}\n")
 
         # 保存最佳模型（基于验证集RSUM）
         if val_rsum > best_rsum:
