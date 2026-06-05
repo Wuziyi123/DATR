@@ -18,9 +18,7 @@ The framework integrates:
 
 ## Architecture
 
-![Figure 1: Overall framework of the proposed DATR model. It leverages a dual-path feature extraction backbone with frozen pre-trained models and selective unfreezing to encode global and local representations.](https://img.shields.io/badge/Figure1-Overall%20Framework-blue?style=for-the-badge)
-
-*(Replace the badge above with the actual Figure 1 image path, e.g., `![Figure 1](figures/framework.png)`)*
+![Figure 1: Overall framework of our proposed DATR model for cross-modal image-text retrieval.](images/figure1.png)
 
 ## 🔧 Installation
 
