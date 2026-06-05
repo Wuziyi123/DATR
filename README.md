@@ -106,9 +106,7 @@ The script will load the model and run validation, outputting R@1/5/10 for both 
 
 ## 🔬 Visual Grounding
 
-![Figure 4: Per-word visual attention maps for a sample image-text pair. The heatmaps indicate the regions of interest that the model prioritizes when matching specific textual queries with image fragments.](https://img.shields.io/badge/Figure4-Visual%20Attention-blue?style=for-the-badge)
-
-*(Replace the badge above with the actual Figure 4 image path, e.g., `![Figure 4](figures/figure4.png)`)*
+![Figure 2: Per-word visual attention maps for a sample image-text pair. The heatmaps indicate the regions of interest that the model prioritizes when matching specific textual queries with image fragments.](images/figure2.png)
 
 The Grad-CAM visualizations demonstrate that specific keywords (e.g., "girl", "bike") are correctly grounded to their corresponding image regions, confirming fine-grained cross-modal alignment.
 
