@@ -51,7 +51,7 @@ pip install pytorch-lightning wandb  # for logging
 
 ### Flickr30K
 
-Download the dataset from [http://shannon.cs.illinois.edu/deepvision/](http://shannon.cs.illinois.edu/deepvision/):
+Please prepare the Flickr30K and MSCOCO dataset:
 
 1. Images: download `flickr30k-images.tar`
 2. Annotations: download `results_20130124.token`
