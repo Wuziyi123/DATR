@@ -1,13 +1,3 @@
----
-AIGC:
-    Label: "1"
-    ContentProducer: 001191110102MACQD9K64018705
-    ProduceID: 920710044476921_0/project_7647912330126328070-files/README_DATR_v2.md
-    ReservedCode1: ""
-    ContentPropagator: 001191110102MACQD9K64028705
-    PropagateID: 920710044476921#1780672670651
-    ReservedCode2: ""
----
 # DATR: Calibrate and Aggregate for Cross-Modal Retrieval with Distribution Alignment and Token Reduction
 
 Official PyTorch Implementation of the ICMR 2026 paper:
@@ -190,8 +180,4 @@ If you use DATR in your research, please cite:
   year      = {2026},
   doi       = {10.1145/3805622.3810660}
 }
-```
 
----
-
-> 本内容由 Coze AI 生成，请遵循相关法律法规及《人工智能生成合成内容标识办法》使用与传播。
