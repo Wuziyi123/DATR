@@ -3,8 +3,7 @@
 Official PyTorch Implementation of the ICMR 2026 paper:
 
 > **Calibrate and Aggregate: Cross-Modal Retrieval with Distribution Alignment and Token Reduction**  
-> [Ziyi Wu](https://github.com/Wuziyi123), [Jiahao Li](https://github.com/Wuziyi123), [Mingyuan Jiu*](mailto:iemyjiu@zzu.edu.cn), [Hongru Zhao](mailto:zhaohongru@zzu.edu.cn), [Hichem Sahbi](mailto:hichem.sahbi@lip6.fr), [Mingliang Xu](mailto:iexumingliang@zzu.edu.cn)  
-> Zhengzhou University & CNRS LIP6, Sorbonne University  
+> [Ziyi Wu](https://github.com/Wuziyi123), [Jiahao Li](https://github.com/Wuziyi123), [Mingyuan Jiu*](mailto:iemyjiu@zzu.edu.cn), [Hongru Zhao](mailto:zhaohongru@zzu.edu.cn), [Hichem Sahbi](mailto:hichem.sahbi@lip6.fr), [Mingliang Xu](mailto:iexumingliang@zzu.edu.cn)   
 > **ICMR 2026** (Amsterdam, Netherlands)  
 
 ## 📖 Overview
