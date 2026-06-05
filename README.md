@@ -92,17 +92,11 @@ The script will load the model and run validation, outputting R@1/5/10 for both 
 
 ### Table 1: Flickr30K 1K Test Set Results
 
-| Backbone | I2T R@1 | I2T R@5 | I2T R@10 | T2I R@1 | T2I R@5 | T2I R@10 | RSUM |
-|----------|---------|---------|----------|---------|---------|----------|------|
-| ViT-B/16 | 86.5 | 98.6 | 99.6 | 74.1 | 95.4 | 97.7 | **551.9** |
-| ViT-L/14@336px | 88.6 | — | — | 75.6 | — | — | 560.2 |
-| Swin-Base-224 | **89.6** | — | — | **77.2** | — | — | **561.5** |
+![Table 1: Performance comparison on Flickr30K dataset. The input resolution (e.g., 224px) is specified in parentheses for each backbone. Our DATR framework achieves state-of-the-art results, with the Swin-base-224 variant attaining an R@sum of 561.5. Metrics reported are Recall@1, Recall@5, Recall@10, and R@sum for bidirectional retrieval.](images/table1.png)
 
 ### Table 2: MSCOCO 1K Test Set Results
 
-| Backbone | I2T R@1 | I2T R@5 | I2T R@10 | T2I R@1 | T2I R@5 | T2I R@10 | RSUM |
-|----------|---------|---------|----------|---------|---------|----------|------|
-| ViT-B/16 | 86.4 | — | — | 71.1 | — | — | **544.8** |
+![Table 2: Performance comparison on MSCOCO dataset. DATR demonstrates superior performance, achieving competitive state-of-the-art results on both the 1K and 5K test sets.](images/table2.png)
 
 ## 🔬 Visual Grounding
 
