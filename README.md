@@ -48,9 +48,6 @@ pip install pytorch-lightning wandb  # for logging
 ```
 
 ## 📦 Dataset Setup
-
-### Flickr30K
-
 Please prepare the Flickr30K and MSCOCO dataset:
 
 1. Images: download `flickr30k-images.tar`
