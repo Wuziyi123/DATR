@@ -77,27 +77,12 @@ Follow standard splits for 1K and 5K test sets as in VSE++ / SCAN.
 python latest.py
 ```
 
-Key parameters are defined in the training script. Default configuration:
-
-| Parameter | Value |
-|-----------|-------|
-| Visual Encoder | CLIP ViT-B/16 (frozen, last 2 blocks unfrozen) |
-| Text Encoder | BERT (last 3 layers unfrozen) |
-| Optimizer | Adam |
-| Batch Size | 128 |
-| Epochs | 60 |
-| LR | 2e-4 (decay ×0.1 at epoch 30) |
-| Precision | Mixed (FP16) |
-| GPU | 1× NVIDIA 4090 |
-| Token Crops | 32 per image |
-| DTR Ratio | 0.6 (60% tokens retained) |
-
 ### Inference
 
 Load a trained checkpoint and run evaluation:
 
 ```python
-# In latest_1780671364245_1_xjzd.py, set checkpoint=True
+# In latest.py, set checkpoint=True
 # and specify your model path
 checkpoint = True
 model_path = "retriever_epoch_best.pth"  # your checkpoint
