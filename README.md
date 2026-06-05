@@ -91,15 +91,22 @@ The script will load the model and run validation, outputting R@1/5/10 for both 
 
 ### Table 1: Flickr30K 1K Test Set Results
 
-![Table 1: Performance comparison on Flickr30K dataset. The input resolution (e.g., 224px) is specified in parentheses for each backbone. Our DATR framework achieves state-of-the-art results, with the Swin-base-224 variant attaining an R@sum of 561.5. Metrics reported are Recall@1, Recall@5, Recall@10, and R@sum for bidirectional retrieval.](images/table1.png)
+<div align="center">
+  <img src="images/table1.png" alt="Table 1: Performance comparison on Flickr30K dataset. The input resolution (e.g., 224px) is specified in parentheses for each backbone. Our DATR framework achieves state-of-the-art results, with the Swin-base-224 variant attaining an R@sum of 561.5. Metrics reported are Recall@1, Recall@5, Recall@10, and R@sum for bidirectional retrieval." width="80%">
+</div>
 
 ### Table 2: MSCOCO 1K Test Set Results
 
-![Table 2: Performance comparison on MSCOCO dataset. DATR demonstrates superior performance, achieving competitive state-of-the-art results on both the 1K and 5K test sets.](images/table2.png)
+<div align="center">
+  <img src="images/table2.png" alt="Table 2: Performance comparison on MSCOCO dataset. DATR demonstrates superior performance, achieving competitive state-of-the-art results on both the 1K and 5K test sets." width="80%">
+</div>
+
 
 ## 🔬 Visual Grounding
 
-![Figure 2: Per-word visual attention maps for a sample image-text pair. The heatmaps indicate the regions of interest that the model prioritizes when matching specific textual queries with image fragments.](images/figure2.png)
+<div align="center">
+  <img src="images/figure2.png" alt="Figure 2: Per-word visual attention maps for a sample image-text pair. The heatmaps indicate the regions of interest that the model prioritizes when matching specific textual queries with image fragments." width="80%">
+</div>
 
 
 ## 📝 Citation
