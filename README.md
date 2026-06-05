@@ -1,4 +1,4 @@
-# DATR: Calibrate and Aggregate for Cross-Modal Retrieval with Distribution Alignment and Token Reduction
+# Calibrate and Aggregate: Cross-Modal Retrieval with Distribution Alignment and Token Reduction
 
 Official PyTorch Implementation of the ICMR 2026 paper:
 
@@ -6,7 +6,6 @@ Official PyTorch Implementation of the ICMR 2026 paper:
 > [Ziyi Wu](https://github.com/Wuziyi123), [Jiahao Li](https://github.com/Wuziyi123), [Mingyuan Jiu*](mailto:iemyjiu@zzu.edu.cn), [Hongru Zhao](mailto:zhaohongru@zzu.edu.cn), [Hichem Sahbi](mailto:hichem.sahbi@lip6.fr), [Mingliang Xu](mailto:iexumingliang@zzu.edu.cn)  
 > Zhengzhou University & CNRS LIP6, Sorbonne University  
 > **ICMR 2026** (Amsterdam, Netherlands)  
-> [📄 Paper (doi:10.1145/3805622.3810660)](https://doi.org/10.1145/3805622.3810660)
 
 ## 📖 Overview
 
