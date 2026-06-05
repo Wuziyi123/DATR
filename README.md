@@ -114,32 +114,6 @@ The script will load the model and run validation, outputting R@1/5/10 for both 
 
 The Grad-CAM visualizations demonstrate that specific keywords (e.g., "girl", "bike") are correctly grounded to their corresponding image regions, confirming fine-grained cross-modal alignment.
 
-## 🔍 Key Components
-
-### Distribution Calibration Module (DCM)
-
-- Reparameterizes global features into Gaussian distributions (mean μ, log-variance logσ²) via two-layer MLPs
-- Maximizes inter-modal mutual information with symmetric InfoNCE loss
-- KL-divergence regularization prevents variance collapse (weight λ_KL = 0.1)
-
-### Differentiable Token Reduction (DTR)
-
-- Gumbel-Softmax soft assignment: projects local image features to score matrix, applies differentiable sampling
-- Aggregates N = 32 visual tokens into G semantic groups
-- Achieves optimal trade-off at reduction ratio 0.6 (20 groups from 32 tokens)
-
-### Loss Function
-
-The total loss combines three terms:
-
-```
-L = L_cont + λ_metric · L_metric + λ_cal · L_cal
-```
-
-- **L_cont**: Contrastive InfoNCE loss on calibrated global features
-- **L_metric**: Metric consistency (global: projected squared difference; local: SCAN bidirectional cross-attention)
-- **L_cal**: Distribution calibration loss (InfoNCE + KL regularization)
-
 ## 📝 Citation
 
 If you use DATR in your research, please cite:
