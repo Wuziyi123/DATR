@@ -108,7 +108,6 @@ The script will load the model and run validation, outputting R@1/5/10 for both 
 
 ![Figure 2: Per-word visual attention maps for a sample image-text pair. The heatmaps indicate the regions of interest that the model prioritizes when matching specific textual queries with image fragments.](images/figure2.png)
 
-The Grad-CAM visualizations demonstrate that specific keywords (e.g., "girl", "bike") are correctly grounded to their corresponding image regions, confirming fine-grained cross-modal alignment.
 
 ## 📝 Citation
 
