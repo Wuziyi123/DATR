@@ -74,7 +74,7 @@ Follow standard splits for 1K and 5K test sets as in VSE++ / SCAN.
 ### Training
 
 ```bash
-python latest_1780671364245_1_xjzd.py
+python latest.py
 ```
 
 Key parameters are defined in the training script. Default configuration:
