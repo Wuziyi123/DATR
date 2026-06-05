@@ -14,16 +14,7 @@ Official PyTorch Implementation of the ICMR 2026 paper:
 The framework integrates:
 - **Distribution Calibration Module (DCM)** — Maps features into a Gaussian latent space via reparameterization and maximizes inter-modal mutual information with InfoNCE loss.
 - **Differentiable Token Reduction (DTR)** — Dynamically clusters redundant visual tokens into semantic groups using Gumbel-Softmax soft assignment, reducing computation while preserving semantics.
-- **Dual-Stream Backbones** — Frozen CLIP ViT + BERT with selective unfreezing for global and local feature extraction.
 
-<div align="center">
-
-| Dataset | Backbone | I2T R@1 | T2I R@1 | RSUM |
-|---------|----------|---------|---------|------|
-| Flickr30K | ViT-B/16 | 86.5 | 74.1 | 551.9 |
-| Flickr30K | Swin-Base-224 | **89.6** | **77.2** | **561.5** |
-
-</div>
 
 ## Architecture
 
