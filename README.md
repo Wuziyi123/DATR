@@ -114,4 +114,3 @@ If you use DATR in your research, please cite:
   year      = {2026},
   doi       = {10.1145/3805622.3810660}
 }
-
